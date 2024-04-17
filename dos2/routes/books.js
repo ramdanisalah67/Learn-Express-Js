@@ -1,17 +1,10 @@
 const express = require("express");
 const router = express.Router()
-
+const asyncHandler = require("express-async-handler")
+const {Book,validate_input} = require("../Models/Book")
 //==Variables :
 
-const books=[
-    {id:1,name:"book1"},
-    {id:2,name:"book2"},
-    {id:3,name:"book3"},
-    {id:4,name:"book4"},
-    {id:5,name:"book5"},
-    {id:6,name:"book6"},
 
-]
 //==Http Methods /Verbs
 
 
@@ -29,9 +22,14 @@ router.get("/welcome",(req,res)=>{
 @method => Get
 @access => public
 */
-router.get("",(req,res)=>{
+router.get("/",asyncHandler(
+
+   async (req,res)=>{
+
+    const books = await Book.find().populate("author",["_id","fullName"]);
+    console.log(books)
     res.status(200).json(books)
-})
+}))
 
 
 /*
@@ -42,18 +40,17 @@ router.get("",(req,res)=>{
 @access => public
 */
 
-router.get("/:id",(req,res)=>{
-    const bookFound = books.find(b=>b.id === parseInt(req.params.id)) 
-    if(bookFound){
-        res.status(200).json(bookFound)
+router.get("/:id",asyncHandler(async(req,res)=>{
+    
+    const bookFound = await Book.findById(req.params.id).populate("author",["_id","fullName"]);
+    if(bookFound) {
+        res.status(200).json(bookFound);
     }
-    else res.status(404).json({message:'book not found'})
-})
+    else {
+        res.status(404).json({message:"book not found"})    
+    } 
 
-//Post Method & validation of request ==> in scearion that we have request contains many input it makes hard to handle validation with our hand so we need 'joi'
-
-const Joi = require('joi')
-
+}))
 
 /*
 
@@ -63,26 +60,28 @@ const Joi = require('joi')
 @access => public
 */
 
-router.post("/save",(req,res)=>{
-    console.log(req.body)
+router.post("/save",asyncHandler(async(req,res)=>{
 
- /*   if(!req.body.name){
-        return res.status(404).json({message:'name is required'}); //we dont need this anymore we will use joi
-    } 
-    */
+
    const {error} = validate_input(req.body);
 
    if(error) {
     return res.status(404).json({message:error.details[0].message}) ;
    }
 
-    const book = {
-        id:books.length+1,
-        name:req.body.name
-    }
-    books.push(book)
-    res.status(200).json({message:'book saved succesfully !!'})
+    const book = new Book({
+        name:req.body.name,
+        author:req.body.author,
+        price:req.body.price,
+        description:req.body.description,
+        cover:req.body.cover
+    })
+   const bookSaved = await book.save();
+   
+    res.status(200).json({message:'book saved succesfully !!'+bookSaved.title})
 })
+
+)
 
 
 /*
@@ -159,14 +158,3 @@ router.delete("/:id",(req,res)=>{
 
 module.exports = router
 
-
-//========================= Functions ==================================
-
-function validate_input(obj) {
-    const schema = Joi.object({
-        name:Joi.string().trim().min(3).max(10).required()
-       })
-
-       return schema.validate(obj)
-    
-}

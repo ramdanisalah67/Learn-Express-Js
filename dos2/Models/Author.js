@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Joi = require("joi")
 
 
 const AuthorSchema = new mongoose.Schema({
@@ -24,5 +25,20 @@ const AuthorSchema = new mongoose.Schema({
 const Author = mongoose.model("Author",AuthorSchema);
 
 module.exports = {
-    Author
+    Author,
+    validate_input
 } 
+
+
+//========================= Functions ==================================
+
+function validate_input(obj) {
+    const schema = Joi.object({
+        fullName:Joi.string().trim().min(3).max(10).required(),
+        country:Joi.string().trim().min(3).max(10).required()
+
+       })
+
+       return schema.validate(obj)
+    
+}

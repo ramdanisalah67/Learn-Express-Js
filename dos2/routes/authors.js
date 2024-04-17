@@ -1,19 +1,31 @@
 const express = require("express")
 const router = express.Router()
-const Joi = require("joi")
-const {Author} = require("../Models/Author")
+const {Author,validate_input} = require("../Models/Author")
+const asyncHandler = require("express-async-handler")
+
+
+//===========================================API Author================================================
 
 
 
 
-router.get("/",async (req,res)=>{
-    const allAuthors = await Author.find();
-    res.status(200).json(allAuthors)
-})
+//===========GET
+
+router.get("/",
+
+        asyncHandler(
+                async (req,res)=>{
+                    const allAuthors = await Author.find();
+                //  const allAuthors2 = await Author.find().sort({country:1}).select("country -_id"); //ordred by fullName and get just countrues of author
+                    res.status(200).json(allAuthors)
 
 
+                }))
 
-router.post("/save",async (req,res)=>{
+
+//========POST
+
+router.post("/save",asyncHandler(async (req,res)=>{
 
 
 
@@ -22,7 +34,6 @@ router.post("/save",async (req,res)=>{
            return res.status(404).json({message:error.details[0].message})
        }
 
-       try {
 
         const author = new Author({
             fullName:req.body.fullName,
@@ -31,32 +42,75 @@ router.post("/save",async (req,res)=>{
 
         const result =  await  author.save();
         res.status(200).json(result)
-    }
+    
 
        
-       catch(error){
-        console.log(error)
-        res.status(500).json({message:'Something went wrong'})
-       }
-}
+      
+})
     );
        
 
 
+//============Get Author By id
+ router.get("/:id",asyncHandler(async (req,res)=>{
 
+    const author = await Author.findById(req.params.id);
+
+    if(author) {
+        res.status(200).json(author)
+    }
+    else {
+        res.status(404).json({message:"author not found !! "})
+    }
+
+ }))
+
+
+
+//==================== PUT =================
+
+
+router.put("/:id",asyncHandler(async (req,res)=>{
+
+    const author = await Author.findByIdAndUpdate(req.params.id,{
+        $set: {
+            fullName: req.body.fullName,
+            country: req.body.country
+        }
+    },{new:true})
+
+    res.status(200).json(author);
+
+
+
+}))
+
+
+
+//==================== DELETE =================
+
+
+router.delete("/:id",async (req,res)=>{
+
+ try {
+    const author = await Author.findById(req.params.id);
+
+    if(author) {
+        await  Author.findByIdAndDelete(req.params.id);
+        res.status(200).json({message:"author has been deleted !!"})
+    }
+    else {
+            res.status(404).json({message:"author not found"})
+    }
+ }
+ catch(error){
+    console.log(error); 
+    res.status(404).json({message:"Something went wrong !! "})
+ }
+
+
+})
 
 module.exports = router
 
 
-//========================= Functions ==================================
-
-function validate_input(obj) {
-    const schema = Joi.object({
-        fullName:Joi.string().trim().min(3).max(10).required(),
-        country:Joi.string().trim().min(3).max(10).required()
-
-       })
-
-       return schema.validate(obj)
-    
-}
