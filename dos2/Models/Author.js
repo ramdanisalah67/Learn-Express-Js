@@ -7,13 +7,13 @@ const AuthorSchema = new mongoose.Schema({
         type: String,
         required: true,
         minLength:3,
-        maxLength:10
+        maxLength:50
     },
     country: {
         type: String,
         required: true,
         minLength:3,
-        maxLength:10
+        maxLength:50
     },
     
 },{

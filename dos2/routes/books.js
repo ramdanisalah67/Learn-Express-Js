@@ -23,11 +23,16 @@ router.get("/welcome",(req,res)=>{
 @access => public
 */
 router.get("/",asyncHandler(
+    /*
+    opertaors => visit mongodb operators website
+    example :
+            $eq , $ne, $lt,$lte,$gt,$gte,$in:[x,y],$nin[x,y]
+    */
 
    async (req,res)=>{
 
     const books = await Book.find().populate("author",["_id","fullName"]);
-    console.log(books)
+    console.log(req.query)
     res.status(200).json(books)
 }))
 

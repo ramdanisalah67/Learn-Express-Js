@@ -7,7 +7,7 @@ const BookSchema = new mongoose.Schema({
         type: String,
         required: true,
         minLength:3,
-        maxLength:10
+        maxLength:100
     },
     author :{
         type: mongoose.Schema.Types.ObjectId,
@@ -17,13 +17,13 @@ const BookSchema = new mongoose.Schema({
     price: {
         type: Number,
         required: true,
-        min:100
+        min:5
     },
     description: {
         type: String ,
         required:true,
         minLength:10,
-        maxLength:20
+        maxLength:200
     },
     cover: {
         type:String,

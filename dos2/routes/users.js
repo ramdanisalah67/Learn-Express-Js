@@ -4,7 +4,7 @@ const asyncHandler = require("express-async-handler")
 const {User,validateRegister,validateLogin,validateUpdate} = require("../Models/User")
 const bcrypt = require("bcryptjs");
 const JWT = require("jsonwebtoken")
-const {verifyToken} = require("../middlwares/verifyToken")
+const {verifyToken,verifyTokenAndAuthorization,verifyTokenAndAdmin} = require("../middlwares/verifyToken")
 
 /*
 
@@ -13,16 +13,7 @@ const {verifyToken} = require("../middlwares/verifyToken")
 @method => PUT
 @access => private
 */
-router.put("/:id",verifyToken,asyncHandler(async(req,res)=>{
-
-
-
-    if(req.params.id != req.user.id)
-                {
-                   return  res.status(403).json({message:"you are not authorized to update this user"})
-                    
-                }
-
+router.put("/:id",verifyTokenAndAuthorization,asyncHandler(async(req,res)=>{
 
     const {error} = validateUpdate(req.body)
     if(error){
@@ -57,7 +48,7 @@ router.put("/:id",verifyToken,asyncHandler(async(req,res)=>{
 @method => PUT
 @access => private
 */
-router.get("/",asyncHandler(async(req,res)=>{
+router.get("/",verifyTokenAndAdmin,asyncHandler(async(req,res)=>{
 
  const allUsers = await User.find().select("email password");
   
@@ -67,4 +58,53 @@ router.get("/",asyncHandler(async(req,res)=>{
 }))
 
 
+
+
+/*
+
+@desc => get  User By Id
+@route => /api/users/:id
+@method => GET
+@access => private (all user authenticated)
+*/
+router.get("/:id",verifyTokenAndAuthorization,asyncHandler(async(req,res)=>{
+
+    const user = await User.findById(req.params.id).select("-password")
+
+    if(user){
+        res.status(200).json(user);
+    }
+
+    else {
+        res.status(404).json({message:"user not found"})
+
+    }
+   
+   
+   }))
+   
+
+
+   /*
+
+@desc => Delete  User By Id
+@route => /api/users/:id
+@method => DELETE
+@access => private (all user authenticated)
+*/
+router.delete("/:id",verifyTokenAndAuthorization,asyncHandler(async(req,res)=>{
+
+    const user = await User.findByIdAndDelete(req.params.id).select("-password")
+
+    if(user){
+        res.status(200).json({message:"user deleted successfully"});
+    }
+
+    else {
+        res.status(404).json({message:"user not found"})
+
+    }
+   
+   
+   }))
 module.exports = router ;
