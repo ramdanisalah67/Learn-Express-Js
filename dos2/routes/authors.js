@@ -15,9 +15,20 @@ router.get("/",
 
         asyncHandler(
                 async (req,res)=>{
+
+                    //== Pagination
+                    const page = parseInt(req.query.page) || 1;
+                    const limit = parseInt(req.query.limit) || 10;
+                    const skip = (page - 1) * limit;
+
+                    const authors = await Author.find().skip(skip).limit(limit);
+
+                    res.status(200).json(authors)
+
+               /*     console.log(req.query)
                     const allAuthors = await Author.find();
                 //  const allAuthors2 = await Author.find().sort({country:1}).select("country -_id"); //ordred by fullName and get just countrues of author
-                    res.status(200).json(allAuthors)
+                    res.status(200).json(allAuthors)*/
 
 
                 }))
