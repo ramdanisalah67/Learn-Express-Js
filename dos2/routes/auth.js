@@ -40,7 +40,7 @@ router.post("/register",asyncHandler(async(req,res)=>{
     })
     
     const result = await user.save();
-    const token = user.generateToken()
+    const token = JWT.sign({id:user._id,isAdmin:user.isAdmin},process.env.JWT_SEC_KEY,{expiresIn:"4d"}) ; 
     const {password, ...other} = result._doc;
     res.status(201).json({...other,token})
 
@@ -81,9 +81,10 @@ router.post("/login",asyncHandler(async(req,res)=>{
     }
 
     
-    const token = user.generateToken()
+    const token = JWT.sign({id:user._id,isAdmin:user.isAdmin},process.env.JWT_SEC_KEY,{expiresIn:"4d"}) ; 
+    console.log(token)
     const {password, ...other} = user._doc;
-    res.status(201).json({...other,token})
+    res.status(200).json({...other,token})
 
 
 }))

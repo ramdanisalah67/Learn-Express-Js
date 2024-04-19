@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Joi = require("joi")
 const JWT = require("jsonwebtoken")
-
+const passwordComplexity = require("joi-password-complexity")
 const userSchema = new mongoose.Schema({
     email: {
         type: String,
@@ -39,6 +39,7 @@ const User = mongoose.model("User",userSchema);
 
 //== Generate Token 
 userSchema.methods.generateToken = function(){
+    console.log("user schema")
   return   JWT.sign({id:this._id,isAdmin:this .isAdmin},process.env.JWT_SEC_KEY,{expiresIn:"4d"}) ; 
 }
 
@@ -81,7 +82,16 @@ function validateUpdate(obj){
     return schema.validate(obj)
 }
 
+//========================Validate Change Password=====================
 
+
+function validateChangePassword(obj){
+    const schema = Joi.object({
+        password: passwordComplexity().required()
+    })
+
+    return schema.validate(obj)
+}
 
 
 
@@ -90,7 +100,8 @@ module.exports = {
     User,
     validateRegister,
     validateLogin,
-    validateUpdate
+    validateUpdate,
+    validateChangePassword
 
 }
 

@@ -1,7 +1,9 @@
 const asyncHandler = require("express-async-handler")
-const {User} = require("../Models/User")
+const {User,validateChangePassword} = require("../Models/User")
 const JWT = require("jsonwebtoken")
 const bcrypt = require("bcryptjs")
+const nodemailer = require("nodemailer")
+
 /*
 
 @desc => Forgot password
@@ -42,9 +44,44 @@ module.exports.sendForgetPasswordLink= asyncHandler(async (req,res)=>{
 
     const link = `http://localhost:5000/password/reset-password/${userFound._id}/${token}`
 
-    res.json({message:"Click On the Link",resetPasswordLink:link});
+    //res.json({message:"Click On the Link",resetPasswordLink:link});
 
+    //==== Send E-Mail
+    const transporter = nodemailer.createTransport({
+        service : "gmail",
+        auth : {
+            user : process.env.USER_MAIL,
+            pass : process.env.MAIL_PASSWORD
+        }
+    })
 
+    const mailOptions = {
+        from : process.env.USER_MAIL,
+        to :userFound.email,
+        subject : "Reset Password",
+        html:   `
+                <html>
+                <body>
+                     <h1>Reset Password</h1>
+                     <p>Click on the link below to reset your password</p>
+                     <a href = "${link}">Reset Password</a>
+                </body>
+                
+                </html>
+                `
+    };
+
+    transporter.sendMail(mailOptions,function(error,success){
+        if(error){
+            console.log(error);
+            res.status(500).send({ message: "Something went wrong" });
+        }
+        else {
+            console.log("Email sent"+success.response);
+            res.render("link-send")
+
+        }
+    })
 
    
 })
@@ -77,16 +114,12 @@ module.exports.getResetPasswordView= asyncHandler(async (req,res)=>{
     try {
         JWT.verify(req.params.token,secret);
         
-        res.render('reset-password',{email:userFound.email})
+       return  res.render('reset-password',{email:userFound.email})
     } catch (error) {
         console.log(error);
         res.status(500).send({ message: "Internal Server Error" });    }
     
-    
-    
-    const link = `<a href='http://localhost:5000/password/reset-password/${user._id}/${token}>click here</a>`
-
-    res.json({message:"Click On the Link",resetPasswordLink:link});
+  
 
 
 })
@@ -102,6 +135,13 @@ module.exports.getResetPasswordView= asyncHandler(async (req,res)=>{
 
 module.exports.changePassword= asyncHandler(async (req,res)=>{
 
+    //validate Password
+   const {error} = validateChangePassword(req.body)
+
+   if(error){
+    return res.status(400).json({message:error.details[0].message})
+   }
+
     //make sure that user exist
     const userFound = await User.findById(req.params.id)
     if(!userFound){
@@ -109,7 +149,6 @@ module.exports.changePassword= asyncHandler(async (req,res)=>{
     }
     
     const secret = process.env.JWT_SEC_KEY + userFound.password ;
-    console.log(req.body.password)
     try {
         JWT.verify(req.params.token,secret);
         const salt = await bcrypt.genSalt();
@@ -123,10 +162,7 @@ module.exports.changePassword= asyncHandler(async (req,res)=>{
     }
     
     
-    
-    const link = `http://localhost:5000/password/reset-password/${user._id}/${token}`
 
-    res.json({message:"Click On the Link",resetPasswordLink:link});
 
 
 })

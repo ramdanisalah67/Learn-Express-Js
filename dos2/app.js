@@ -5,8 +5,8 @@ const logger = require("./middlwares/logger")
 const {notFound,customizeException} = require("./middlwares/errors")
 
 const connectToDb = require("./config/db")
-
-
+const helmet = require("helmet")
+const cors = require("cors")
 
     //== Connection To mongoDb Connection
         connectToDb()
@@ -18,6 +18,8 @@ const app = express();
 app.set('view engine','ejs')
 app.use(express.json());
 app.use(express.urlencoded({extended:false}))
+app.use(helmet())
+app.use(cors({origin:"http://localhost:3000"}));
 app.use(logger)
 app.use("/api/books",require("./routes/books"))
 app.use("/api/authors", require("./routes/authors"))
