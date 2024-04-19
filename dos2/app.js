@@ -15,12 +15,15 @@ const connectToDb = require("./config/db")
 const app = express();
 
 //apply Middlewares
+app.set('view engine','ejs')
 app.use(express.json());
+app.use(express.urlencoded({extended:false}))
 app.use(logger)
 app.use("/api/books",require("./routes/books"))
 app.use("/api/authors", require("./routes/authors"))
 app.use("/api/auth",require("./routes/auth"))
 app.use("/api/users",require("./routes/users"))
+app.use("/password",require("./routes/password"))
 
 //Error handler middleware
 app.use(notFound)
